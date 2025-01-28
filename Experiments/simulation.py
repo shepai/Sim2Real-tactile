@@ -55,7 +55,7 @@ env = EdgeFollowEnv(
 
 # set seed for deterministic results
 env.seed(seed)
-env.action_space.np_random.seed(seed)
+#env.action_space.np_random.seed(seed)
 
 # create controllable parameters on GUI
 action_ids = []
