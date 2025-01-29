@@ -15,7 +15,7 @@ image_size = [128, 128]
 
 env_modes = {
     # which dofs can have movement
-    "movement_mode": "xy",
+    "movement_mode": "xyz",
 
     # specify arm
     "arm_type": "ur5",
