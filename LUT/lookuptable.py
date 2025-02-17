@@ -27,14 +27,16 @@ class TABLE:
         time=file.shape[1]
         w=file.shape[2]
         h=file.shape[3]
-        c=file.shape[4]
+        try: c=file.shape[4]
+        except: pass
         for i in range(len(unique_keys)): #gather all the classes and insert
             key=unique_keys[i]
             #find insertion point
             new_key=self.insert_class(key)
             un_dirs_x=np.unique(dirs[:,0])
             un_dirs_y=np.unique(dirs[:,1])
-            self.maps[new_key]=np.zeros((len(un_dirs_x),len(un_dirs_y),time,num_pressures,w,h,c),dtype=np.uint8) #create 3d space
+            try: self.maps[new_key]=np.zeros((len(un_dirs_x),len(un_dirs_y),time,num_pressures,w,h,c),dtype=np.uint8) #create 3d space
+            except: self.maps[new_key]=np.zeros((len(un_dirs_x),len(un_dirs_y),time,num_pressures,w,h),dtype=np.uint8) #create 3d space
             #loop through data
             for j in range(len(file)):
                 direction=dirs[j]
