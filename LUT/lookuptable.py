@@ -54,9 +54,9 @@ class TABLE:
         raise FileNotFoundError
     def find_nearest(self,map,dirs,time,pressure,i=0): #find the nereates image in the lookup table
         print("DEPTH",i )
-        print(self.maps[map].shape)
-        if dirs[0]>=self.maps[map].shape[1]: dirs[0]=self.maps[map].shape[1]-1
-        if dirs[1]>=self.maps[map].shape[2]: dirs[1]=self.maps[map].shape[2]-1
+        if dirs[0]>=self.maps[map].shape[0]: dirs[0]=self.maps[map].shape[0]-1
+        if dirs[1]>=self.maps[map].shape[1]: dirs[1]=self.maps[map].shape[1]-1
+        if time>=self.maps[map].shape[2]:time=self.maps[map].shape[2]-1
         if np.sum(self.maps[map][dirs[0]][dirs[1]][time][pressure])==0:
             dirs[0]-=1
             image=self.find_nearest(map,dirs,time,pressure,i=i+1)
