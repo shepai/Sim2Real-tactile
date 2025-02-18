@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import string
+import pandas as pd
+from scipy.spatial import cKDTree
 def generate_random_key(length=16):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choices(characters, k=length))
@@ -85,21 +87,63 @@ class TABLE:
 
 
 
-if __name__ == "__main__":
-    SIZE=10
-    data=np.random.normal(100,10,(SIZE,100,250,250,3)).astype(np.uint8)
-    dirs=[]
-    for i in range(0,10):
-        for j in range(0,10):
-            dirs.append([i,j])
-    dirs=np.array(dirs,dtype=object)
-    print(dirs.shape)
-    table=TABLE()
-    table.add_dataset_to_table(data,np.random.choice([i for i in range(4)],size=(SIZE,)),dirs,np.zeros((SIZE),dtype=np.uint8),3)
+class LookupTable:
+    def __init__(self):
+        self.data = pd.DataFrame(columns=["friction", "dir_x", "dir_y", "time", "pressure", "image"])
 
-    import matplotlib.pyplot as plt
-    import matplotlib
-    matplotlib.use('TkAgg')
-    image=table.look_up(0,[1,1],0,2)
-    plt.imshow(image)
-    plt.show()
+    def add_entry(self, friction, direction, time, pressure, image):
+        entry = {
+            "friction": friction,
+            "dir_x": direction[0],
+            "dir_y": direction[1],
+            "time": time,
+            "pressure": pressure,
+            "image": image
+        }
+        self.data = pd.concat([self.data, pd.DataFrame([entry])], ignore_index=True)
+
+    def find_exact(self, friction, direction, time, pressure):
+        """Exact match lookup."""
+        match = self.data[
+            (self.data["friction"] == friction) &
+            (self.data["dir_x"] == direction[0]) &
+            (self.data["dir_y"] == direction[1]) &
+            (self.data["time"] == time) &
+            (self.data["pressure"] == pressure)
+        ]
+        if not match.empty:
+            return match.iloc[0]["image"]
+        return None
+
+    def find_nearest(self, friction, direction, time, pressure):
+        """Nearest neighbor search using KDTree."""
+        # Construct the KDTree for fast nearest search
+        feature_space = self.data[["friction", "dir_x", "dir_y", "time", "pressure"]].to_numpy()
+        tree = cKDTree(feature_space)
+        
+        query_point = np.array([friction, direction[0], direction[1], time, pressure])
+        dist, idx = tree.query(query_point)
+        
+        return self.data.iloc[idx]["image"]
+
+    def lookup(self, friction, direction, time, pressure):
+        image = self.find_exact(friction, direction, time, pressure)
+        if image is not None:
+            return image
+        return self.find_nearest(friction, direction, time, pressure)
+    
+
+if __name__ == "__main__":
+    table = LookupTable()
+
+    # Add entries
+    image_sample = np.random.randint(0, 256, (64, 64, 3), dtype=np.uint8)
+    table.add_entry(0.15, (1, 0), 5, 3, image_sample)
+
+    # Exact lookup
+    result = table.lookup(0.15, (1, 0), 5, 3)
+    print("Found image shape:", result.shape)
+
+    # Nearest lookup (if exact match is missing)
+    result = table.lookup(0.20, (0, 0), 4, 2)
+    print("Nearest image shape:", result.shape)
